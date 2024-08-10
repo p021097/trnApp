@@ -3,7 +3,8 @@ import "./Header.css";
 import {months} from "../assets/data.js";
 import { StoreContext } from "../context/StoreContext.jsx";
 import Statistics from "./Statistics.jsx";
-import BarChart from "./BarChart.jsx";
+import BarChartData from "./BarChartData.jsx";
+import PieChartBar from "./PieChartBar.jsx";
 
 const Header = () => {
 
@@ -88,7 +89,7 @@ const Header = () => {
   );
 
   return (
-    <div>
+    <div className="main-container">
       <div className="header-tabs">
         <input
           type="search"
@@ -164,8 +165,11 @@ const Header = () => {
           Previous
         </button>
       </div>
+      <div className="bar-data">
       <Statistics/>
-      <BarChart/>
+      <BarChartData/>
+      <PieChartBar/>
+      </div>
     </div>
   );
 };
