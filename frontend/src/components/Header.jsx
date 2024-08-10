@@ -1,93 +1,114 @@
-import React, { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import "./Header.css";
-import { data, months } from "../assets/data.js";
-import axios from 'axios'
+import {months} from "../assets/data.js";
 import { StoreContext } from "../context/StoreContext.jsx";
+import Statistics from "./Statistics.jsx";
+import BarChart from "./BarChart.jsx";
 
 const Header = () => {
-  const {url} = useContext(StoreContext)
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedMonth, setSelectedMonth] = useState('Mar');
-  const [search, setSearch] = useState('')
-  const [trn, setTrn] = useState([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 10
 
+  // Store Context
+  const {
+    combinedData,
+    transactions,
+    barChartData,
+    pieChartData,
+    statistics,
+    selectedMonth,
+    setSelectedMonth,
+    search,
+    setSearch,
+  } = useContext(StoreContext);
+
+  // States
+  const [isOpen, setIsOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  
+  // useEffect(() => {
+  //   console.log(barChartData);
+  //   console.log(pieChartData);
+  //   console.log(combinedData);
+  //   console.log(statistics);
+  //   console.log(transactions.trns.length);
+    
+  // }, [combinedData, selectedMonth]);
+
+
+// Handlers
   const onChangeHandler = (event) => {
-    const value
-    setSelectedMonth(event.target.value)
-    setCurrentPage(1)
+    const { value } = event.target;
+    setSelectedMonth(value);
+    setCurrentPage(1);
   };
 
   const handleSearch = (event) => {
-    set
-  }
-
-  const fetchTransactions = async() => {
-    try {
-      const res = await axios.get(`${url}/api/transactions`, {
-        params:{
-          month : selectedMonth,
-          search: search
-        }
-      })
-      setTrn(res.data)
-      setCurrentPage(1)
-    } catch (error) {
-      console.log(error);
-    }
-  }
-
-  useEffect(()=>{
-    fetchTransactions()
-  },[selectedMonth, search])
-
-
+    setSearch(event.target.value);
+    setCurrentPage(1);
+  };
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
   const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber)
-  }
+    setCurrentPage(pageNumber);
+  };
 
   const handleNextPage = () => {
-    if(currentPage < totalPages) {
-        setCurrentPage(currentPage+1)
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
     }
-  }
+  };
 
   const handlePreviousPage = () => {
-    if(currentPage > 1){
-        setCurrentPage(currentPage - 1)
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
-  }
+  };
 
-  const handleMonthFilter = data.filter((item) => {
-    const saleMonth = new Date(item.dateOfSale).toLocaleString('default',{month : 'short'})
-    return saleMonth == selectedMonth
-  })
+  const handleMonthFilter = transactions.trns.filter((item) => {
+    const saleMonth = new Date(item.dateOfSale).toLocaleString("default", {
+      month: "short",
+    });
+    return (
+      saleMonth == selectedMonth &&
+      (item.title.toLowerCase().includes(search.toLowerCase()) ||
+        item.description.toLowerCase().includes(search.toLowerCase()) ||
+        item.price.toString().includes(search))
+    );
+  });
 
-  const totalPages = Math.ceil(data.length / itemsPerPage)
-  const startIndex = (currentPage - 1) * itemsPerPage
-  const currentItems = handleMonthFilter.slice(startIndex, startIndex + itemsPerPage)
+  const totalPages = Math.ceil(transactions.trns.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentItems = handleMonthFilter.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
- 
-  
   return (
     <div>
       <div className="header-tabs">
-        <input type="search" />
+        <input
+          type="search"
+          placeholder="Search Trasactions ...."
+          value={search}
+          onChange={handleSearch}
+        />
         <div className="dropdown">
           <button onClick={toggleDropdown} className="dropdown-button">
-            Select month
+            Selected Month = {selectedMonth}
           </button>
           {isOpen && (
             <div className="dropdown-menu">
-              <select onChange={onChangeHandler} name="month" value={selectedMonth}>
+              <select
+                onChange={onChangeHandler}
+                name="month"
+                value={selectedMonth}
+              >
                 {months.map((month, idx) => (
-                  <option className="dropdown-item" key={idx} value={month} >
+                  <option className="dropdown-item" key={idx} value={month}>
                     {month}
                   </option>
                 ))}
@@ -98,7 +119,7 @@ const Header = () => {
       </div>
       <div>
         <table>
-          <tHead>
+          <thead>
             <tr>
               <th>Id</th>
               <th>Title</th>
@@ -108,8 +129,8 @@ const Header = () => {
               <th>Sold</th>
               <th>Image</th>
             </tr>
-          </tHead>
-          <tBody>
+          </thead>
+          <tbody>
             {currentItems.map((trn, idx) => (
               <tr key={idx}>
                 <td>{trn.id}</td>
@@ -118,24 +139,33 @@ const Header = () => {
                 <td> $ {trn.price}</td>
                 <td>{trn.category}</td>
                 <td>{trn.sold ? "Yes" : "No"}</td>
-                <td><img src={trn.image} alt={trn.title} className="item-image"/></td>
+                <td>
+                  <img src={trn.image} alt={trn.title} className="item-image" />
+                </td>
               </tr>
             ))}
-          </tBody>
+          </tbody>
         </table>
       </div>
       <div className="pagination">
-
-        <button onClick={handleNextPage} disabled={currentPage == totalPages}>Next</button>
-        {
-            Array.from({length : totalPages}, (_,idx) => (
-                <button key={idx + 1} onClick={() => handlePageChange(idx + 1)} className={currentPage === idx + 1 ? 'active' : ''}>{idx + 1}</button>
-            ))
-        }
-        <button onClick={handlePreviousPage} disabled={currentPage == 1}>Previous</button>
-
-
+        <button onClick={handleNextPage} disabled={currentPage == totalPages}>
+          Next
+        </button>
+        {Array.from({ length: totalPages }, (_, idx) => (
+          <button
+            key={idx + 1}
+            onClick={() => handlePageChange(idx + 1)}
+            className={currentPage === idx + 1 ? "active" : ""}
+          >
+            {idx + 1}
+          </button>
+        ))}
+        <button onClick={handlePreviousPage} disabled={currentPage == 1}>
+          Previous
+        </button>
       </div>
+      <Statistics/>
+      <BarChart/>
     </div>
   );
 };
